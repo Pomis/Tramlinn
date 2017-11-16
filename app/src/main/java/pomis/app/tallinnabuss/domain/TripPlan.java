@@ -35,8 +35,6 @@ public class TripPlan {
 
     Date currentMinTime;
 
-//    ArrayList<TravelLeg> visited
-
     public void calculateClosestStations() {
         currentMinTime = new Date();
         straightDistanceDeparture = 1000;
@@ -66,6 +64,7 @@ public class TripPlan {
                 "walk");
         Route walkToStationRoute = new Route(new Address(departurePoint),
                 departureStation, "walk");
+
         if (directWalkRoute.getWalkTime() < walkToStationRoute.getWalkTime()) {
             Way walkWay = new Way();
             walkWay.add(directWalkRoute, new Date());
@@ -80,7 +79,6 @@ public class TripPlan {
             Date waitTime = stop.waitForBus(departureTime);
             Way accum = new Way(waitTime);
 
-            //ArrayList<Route> connections = CSVDB.findRoutesFrom(departureStation.stop_id);
             ArrayList<Route> connections = stop.getRoutes(false);
             for (Route r : connections) {
                 r.iterate(this, departureTime, accum.mutate(r, waitTime), destinationStation);
@@ -100,7 +98,12 @@ public class TripPlan {
             bestWay.add(directWalkRoute, new Date());
         }
 
-
+        Route walkToDestination = new Route(
+                bestWay.getLastTravelLeg(),
+                new Address(destinationPoint),
+                "walk"
+        );
+        bestWay.add(walkToStationRoute, walkToDestination.getWalkTimeDate());
         return bestWay;
     }
 }

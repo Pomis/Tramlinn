@@ -3,18 +3,14 @@ package pomis.app.tallinnabuss.domain;
 import android.content.Context;
 import android.graphics.Color;
 import android.util.Log;
-
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.PolylineOptions;
-
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-
 import pomis.app.tallinnabuss.R;
 import pomis.app.tallinnabuss.data.CSVDB;
-
 import static java.lang.Math.pow;
 import static java.lang.Math.sqrt;
 
@@ -86,14 +82,16 @@ public class Way {
         //routes.remove(routes.size() - 1);
         Log.d("kek", "draw: size of way = " + routes.size());
         for (Route r : routes) {
-            List<LatLng> latLngs = new ArrayList<>();
-            latLngs.add(r.starts.toLatLng());
-            latLngs.add(r.finishes.toLatLng());
             mMap.addPolyline(new PolylineOptions()
-                    .addAll(latLngs)
+                    .add(r.starts.toLatLng())
+                    .add(r.finishes.toLatLng())
                     .width(10).color(colorFromId(context, r.route_short_name))
-                    .visible(true).clickable(true));
+                    .visible(true));
         }
+    }
+
+    public TravelLeg getLastTravelLeg() {
+        return routes.get(routes.size()-1).finishes;
     }
 
     int colorFromId(Context context, String id) {
@@ -110,10 +108,9 @@ public class Way {
             case "\"4\"":
                 return context.getResources().getColor(R.color.color4);
 
-            case "walk":
+            default:
                 return context.getResources().getColor(R.color.colorAccent);
 
         }
-        return 0;
     }
 }

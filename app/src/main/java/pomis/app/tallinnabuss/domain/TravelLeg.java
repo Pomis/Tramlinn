@@ -45,7 +45,6 @@ public class TravelLeg {
                 return diff;
             }
         }
-        Log.d("kek", "waitForBus: its too late");
         return new Date(0l);
     }
 
@@ -64,10 +63,7 @@ public class TravelLeg {
                     routes.add(new Route(this, s, "walk"));
                     Log.d("kek", "getRoutes: added interchange " + stop_name + " #" + lineNumber
                             + " -> " + s.stop_name + " #" + s.lineNumber);
-
-
                 }
-
             }
         }
         return routes;

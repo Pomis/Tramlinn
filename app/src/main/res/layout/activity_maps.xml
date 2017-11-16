@@ -14,7 +14,8 @@
     <RelativeLayout
         android:id="@+id/rl_points"
         android:layout_width="match_parent"
-        android:layout_height="180dp"
+        android:layout_height="400dp"
+        android:layout_marginBottom="-220dp"
         android:layout_alignParentBottom="true"
         android:background="#fff"
         android:padding="16dp">
@@ -43,6 +44,12 @@
             android:textSize="20dp"
             android:layout_width="match_parent"
             android:layout_height="wrap_content" />
+
+        <com.mindorks.placeholderview.PlaceHolderView
+            android:id="@+id/phvInstructions"
+            android:layout_below="@id/tv_hint"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"/>
 
     </RelativeLayout>
 

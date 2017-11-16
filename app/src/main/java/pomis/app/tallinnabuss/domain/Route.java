@@ -21,6 +21,8 @@ public class Route {
 
     public String route_short_name;
 
+    protected Date diffTime;
+
     public Route(TravelLeg starts, TravelLeg finishes, String route_short_name) {
         this.starts = starts;
         this.finishes = finishes;
@@ -77,5 +79,9 @@ public class Route {
 
         return sqrt(pow(starts.stop_lat - finishes.stop_lat, 2) +
                 pow(starts.stop_lon - finishes.stop_lon, 2));
+    }
+
+    public Date getWalkTimeDate() {
+        return new Date((long) getWalkTime() * 60 * 1000);
     }
 }

@@ -14,6 +14,7 @@ import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.PolylineOptions;
+import com.mindorks.placeholderview.PlaceHolderView;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -32,6 +33,9 @@ import pomis.app.tallinnabuss.domain.TripPlan;
 import pomis.app.tallinnabuss.domain.Way;
 
 public class MapsActivity extends FragmentActivity implements OnMapReadyCallback {
+    @BindView(R.id.phvInstructions)
+    PlaceHolderView phvInstructions;
+
     enum State {
         START_IDLE, DESTINATION_IDLE, ROUTING
     }
@@ -40,10 +44,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     RelativeLayout rlPoints;
     @BindView(R.id.tv_hint)
     TextView tvHint;
-    @BindView(R.id.tv_from)
-    TextView tvFrom;
-    @BindView(R.id.tv_to)
-    TextView tvTo;
+
 
     private GoogleMap mMap;
     private ArrayList<TravelLeg> travelLegs;
@@ -77,13 +78,11 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         initTouches();
         mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(tallinn, 12f));
 
-        drawLines();
+        drawTramLines();
     }
 
-    void drawLines() {
+    void drawTramLines() {
         ArrayList<Route> routes = CSVDB.loadAllRoutes(this);
-
-
         for (Route r : routes) {
             List<LatLng> latLngs = new ArrayList<>();
             latLngs.add(CSVDB.stopWithId(r.starts.stop_id, r.route_short_name).toLatLng());
@@ -97,14 +96,12 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     }
 
 
-
     void initTouches() {
         mMap.setOnMapClickListener(latLng -> {
             switch (activityState) {
 
                 case START_IDLE:
                     tvHint.setText("Select destination point");
-                    tvFrom.setText("Coords: " + latLng.toString());
                     addPedestrianMarker(latLng);
                     activityState = State.DESTINATION_IDLE;
                     tripPlan.departurePoint = latLng;
@@ -112,17 +109,15 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
                 case DESTINATION_IDLE:
                     tvHint.setText("Points selected");
-                    tvTo.setText("Coords: " + latLng.toString());
                     addPedestrianMarker(latLng);
                     activityState = State.ROUTING;
                     tripPlan.destinationPoint = latLng;
                     tripPlan.calculateClosestStations();
-                    tvFrom.setText(Math.floor(tripPlan.straightDistanceDeparture*2200)+" min walk to " + tripPlan.departureStation.stop_name);
-                    tvTo.setText(Math.floor(tripPlan.straightDistanceDestination*2200)+" min walk to " + tripPlan.destinationStation.stop_name);
+//                    tvFrom.setText(Math.floor(tripPlan.straightDistanceDeparture * 2200) + " min walk to " + tripPlan.departureStation.stop_name);
+//                    tvTo.setText(Math.floor(tripPlan.straightDistanceDestination * 2200) + " min walk to " + tripPlan.destinationStation.stop_name);
                     addBusMarker(tripPlan.departureStation);
                     addBusMarker(tripPlan.destinationStation);
 
-                    addWalkPolygons();
                     startCalculating();
                     break;
             }
@@ -130,31 +125,21 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         });
     }
 
-    private void addWalkPolygons() {
-//        List<LatLng> walkPointsDeparture = new ArrayList<>();
-//        walkPointsDeparture.add(tripPlan.departurePoint);
-//        walkPointsDeparture.add(new LatLng(
-//                        tripPlan.departureStation.stop_lat,
-//                        tripPlan.departureStation.stop_lon
-//        ));
-//
-//        mMap.addPolyline(new PolylineOptions()
-//                .addAll(walkPointsDeparture)
-//                .width(10).color(Color.BLUE)
-//                .visible(true).clickable(true));
-
-    }
-
     private void startCalculating() {
         tripPlan.departureTime = getCurrentTime(new Date());
         Way w = tripPlan.calculateBestWay();
-        if (w!=null) {
-            Toasty.info(this, "You can reach it in "+w.getTimeToReach().getMinutes()).show();
+        if (w != null) {
+            Toasty.info(this, "You can reach it in " + w.getTimeToReach().getMinutes()).show();
             w.draw(this, mMap);
-            tvFrom.setText(tvFrom.getText().toString()+"\n"+w.getTimeToReach().getMinutes()+
-                    " min tram (incl. waiting)");
+//            tvFrom.setText(tvFrom.getText().toString() + "\n" + w.getTimeToReach().getMinutes() +
+//                    " min tram (incl. waiting)");
+            initInstructions();
         }
 
+    }
+
+    private void initInstructions() {
+        rlPoints.animate().yBy(-220).setDuration(1500).start();
     }
 
     /*
@@ -164,7 +149,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     private Date getCurrentTime(Date date) {
         SimpleDateFormat sdf = new SimpleDateFormat("HH:mm:ss");
         String time = sdf.format(date.getTime());
-        Toasty.info(this, "Starting time: "+time).show();
+        Toasty.info(this, "Starting time: " + time).show();
         try {
             return sdf.parse(time);
         } catch (ParseException e) {
