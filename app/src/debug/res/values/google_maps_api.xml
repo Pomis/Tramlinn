@@ -1,0 +1,26 @@
+<resources>
+    <!--
+    TODO: Before you run your application, you need a Google Maps API key.
+
+    To get one, follow this link, follow the directions and press "Create" at the end:
+
+    https://console.developers.google.com/flows/enableapi?apiid=maps_android_backend&keyType=CLIENT_SIDE_ANDROID&r=25:16:F0:6F:47:81:2A:FC:2E:82:08:8E:74:A6:32:FB:D0:81:D1:7D%3Bpomis.app.tallinnabuss.ui.activities
+
+    You can also add your credentials to an existing key, using these values:
+
+    Package name:
+    25:16:F0:6F:47:81:2A:FC:2E:82:08:8E:74:A6:32:FB:D0:81:D1:7D
+
+    SHA-1 certificate fingerprint:
+    25:16:F0:6F:47:81:2A:FC:2E:82:08:8E:74:A6:32:FB:D0:81:D1:7D
+
+    Alternatively, follow the directions here:
+    https://developers.google.com/maps/documentation/android/start#get-key
+
+    Once you have your key (it starts with "AIza"), replace the "google_maps_key"
+    string in this file.
+    -->
+    <string name="google_maps_key" templateMergeStrategy="preserve" translatable="false">
+        AIzaSyBtJ-d0OK5-9-LfFuu7leHJuN7AxNX_e0s
+    </string>
+</resources>
