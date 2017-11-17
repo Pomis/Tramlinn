@@ -15,6 +15,8 @@ import java.util.ArrayList;
 import java.util.Date;
 
 import pomis.app.tallinnabuss.domain.Route;
+import pomis.app.tallinnabuss.domain.RouteBuilder;
+import pomis.app.tallinnabuss.domain.TramStop;
 import pomis.app.tallinnabuss.domain.TravelLeg;
 
 
@@ -54,7 +56,7 @@ public class CSVDB {
             reader.readLine();
             while ((csvLine = reader.readLine()) != null) {
                 String[] row = csvLine.split(",");
-                TravelLeg stop = new TravelLeg();
+                TramStop stop = new TramStop();
                 stop.stop_id = Integer.parseInt(row[1]);
                 stop.stop_name = row[3];
                 stop.schedule = stringsToDates(row[6].split(" "));
@@ -94,11 +96,9 @@ public class CSVDB {
             reader.readLine();
             while ((csvLine = reader.readLine()) != null) {
                 String[] row = csvLine.split(",");
-                routes.add(new Route(
-                        stopWithId(Integer.parseInt(row[1]), row[4]),
-                        stopWithId(Integer.parseInt(row[2]), row[4]),
-                        row[4]
-                ));
+                routes.add(RouteBuilder.from(stopWithId(Integer.parseInt(row[1]), row[4]))
+                        .to(stopWithId(Integer.parseInt(row[2]), row[4]))
+                        .onTram(row[4]));
             }
         } catch (IOException ex) {
             throw new RuntimeException("Error in reading CSV file: " + ex);

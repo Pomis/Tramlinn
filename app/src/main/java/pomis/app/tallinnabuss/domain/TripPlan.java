@@ -59,13 +59,11 @@ public class TripPlan {
     }
 
     public Way calculateBestWay() {
-        Route directWalkRoute = new Route(new Address(departurePoint),
-                new Address(destinationPoint),
-                "walk");
-        Route walkToStationRoute = new Route(new Address(departurePoint),
-                departureStation, "walk");
+        Route directWalkRoute = RouteBuilder.from(departurePoint).to(destinationPoint).walking();
+        Route walkToStationRoute = RouteBuilder.from(departurePoint).to(departureStation).walking();
 
-        if (directWalkRoute.getWalkTime() < walkToStationRoute.getWalkTime()) {
+
+        if (directWalkRoute.diff.getTime() < walkToStationRoute.diff.getTime()) {
             Way walkWay = new Way();
             walkWay.add(directWalkRoute, new Date());
             return walkWay;
@@ -78,6 +76,7 @@ public class TripPlan {
 
             Date waitTime = stop.waitForBus(departureTime);
             Way accum = new Way(waitTime);
+
 
             ArrayList<Route> connections = stop.getRoutes(false);
             for (Route r : connections) {
@@ -92,18 +91,16 @@ public class TripPlan {
                 if (w.getTimeToReach().getTime() < bestWay.getTimeToReach().getTime())
                     bestWay = w;
             }
-            bestWay.add(walkToStationRoute, new Date(0l));
+            bestWay.addToEnd(walkToStationRoute, new Date(0l));
+
+            Route walkToDestination = RouteBuilder.from(bestWay.getLastTravelLeg()).to(destinationPoint)
+                    .walking();
+            bestWay.add(walkToDestination, walkToDestination.diff);
         } else {
             bestWay = new Way();
             bestWay.add(directWalkRoute, new Date());
         }
 
-        Route walkToDestination = new Route(
-                bestWay.getLastTravelLeg(),
-                new Address(destinationPoint),
-                "walk"
-        );
-        bestWay.add(walkToStationRoute, walkToDestination.getWalkTimeDate());
         return bestWay;
     }
 }

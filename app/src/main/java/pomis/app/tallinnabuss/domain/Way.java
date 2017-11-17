@@ -1,26 +1,29 @@
 package pomis.app.tallinnabuss.domain;
 
 import android.content.Context;
-import android.graphics.Color;
 import android.util.Log;
+
 import com.google.android.gms.maps.GoogleMap;
-import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.PolylineOptions;
+
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.List;
+
 import pomis.app.tallinnabuss.R;
-import pomis.app.tallinnabuss.data.CSVDB;
-import static java.lang.Math.pow;
-import static java.lang.Math.sqrt;
 
 /**
  * Created by romanismagilov on 15.11.17.
  */
 
 public class Way {
+
+
     private ArrayList<Route> routes;
     private Date timeToReach;
+
+    public ArrayList<Route> getRoutes() {
+        return routes;
+    }
 
     public Way(ArrayList<Route> way, Date timeToReach) {
         this.routes = way;
@@ -43,6 +46,12 @@ public class Way {
         timeToReach = new Date(timeToReach.getTime() + additionalTime.getTime());
     }
 
+    public void addToEnd(Route route, Date additionalTime) {
+        routes.add(0, route);
+        timeToReach = new Date(timeToReach.getTime() + additionalTime.getTime());
+    }
+
+
     public Way mutate(Route route, Date additionalTime) {
         ArrayList<Route> routesNew = ((ArrayList<Route>) routes.clone());
         routesNew.add(route);
@@ -53,14 +62,6 @@ public class Way {
         return way;
     }
 
-    public boolean contains(TravelLeg leg) {
-        boolean contains = false;
-        for (Route r : routes) {
-            if (r.finishes == leg || r.starts == leg)
-                contains = true;
-        }
-        return contains;
-    }
 
     public int getDepth() {
         return routes.size();
@@ -85,13 +86,13 @@ public class Way {
             mMap.addPolyline(new PolylineOptions()
                     .add(r.starts.toLatLng())
                     .add(r.finishes.toLatLng())
-                    .width(10).color(colorFromId(context, r.route_short_name))
+                    .width(10).color(colorFromId(context, r.routeName))
                     .visible(true));
         }
     }
 
     public TravelLeg getLastTravelLeg() {
-        return routes.get(routes.size()-1).finishes;
+        return routes.get(routes.size() - 1).finishes;
     }
 
     int colorFromId(Context context, String id) {

@@ -10,11 +10,13 @@ import java.util.Date;
 
 import pomis.app.tallinnabuss.data.CSVDB;
 
+import static pomis.app.tallinnabuss.data.Const.CENTRAL_STATION;
+
 /**
  * Created by romanismagilov on 12.11.17.
  */
 
-public class TravelLeg {
+public abstract class TravelLeg {
 
     public int stop_id;
 
@@ -54,15 +56,10 @@ public class TravelLeg {
             ArrayList<TravelLeg> neighbors = CSVDB.stopsWhere(stop_name);
             for (TravelLeg s : neighbors) {
                 boolean isNeighbor = s.stop_name.equals(stop_name) && !s.lineNumber.equals(lineNumber);
+                if (stop_name.equals(CENTRAL_STATION) && interchanging && isNeighbor
+                        || !interchanging && isNeighbor) {
+                    routes.add(RouteBuilder.from(this).to(s).walking());
 
-                if (stop_name.equals("\"Hobujaama\"") && interchanging && isNeighbor) {
-                    routes.add(new Route(this, s, "walk"));
-                    Log.d("kek", "getRoutes: added interchange " + stop_name + " #" + lineNumber
-                            + " -> " + s.stop_name + " #" + s.lineNumber);
-                } else if (!interchanging && isNeighbor) {
-                    routes.add(new Route(this, s, "walk"));
-                    Log.d("kek", "getRoutes: added interchange " + stop_name + " #" + lineNumber
-                            + " -> " + s.stop_name + " #" + s.lineNumber);
                 }
             }
         }

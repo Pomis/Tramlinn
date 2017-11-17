@@ -2,6 +2,7 @@ package pomis.app.tallinnabuss.ui.activities;
 
 import android.graphics.Color;
 import android.os.Bundle;
+import android.support.annotation.Nullable;
 import android.support.v4.app.FragmentActivity;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
@@ -25,12 +26,17 @@ import java.util.List;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import es.dmoral.toasty.Toasty;
+import lombok.val;
 import pomis.app.tallinnabuss.R;
 import pomis.app.tallinnabuss.data.CSVDB;
 import pomis.app.tallinnabuss.domain.Route;
 import pomis.app.tallinnabuss.domain.TravelLeg;
 import pomis.app.tallinnabuss.domain.TripPlan;
 import pomis.app.tallinnabuss.domain.Way;
+import pomis.app.tallinnabuss.ui.viewmodels.RouteViewModel;
+import pomis.app.tallinnabuss.ui.viewmodels.RouteViewModelFactory;
+
+import static pomis.app.tallinnabuss.data.Const.DEFAULT_TIME;
 
 public class MapsActivity extends FragmentActivity implements OnMapReadyCallback {
     @BindView(R.id.phvInstructions)
@@ -85,8 +91,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         ArrayList<Route> routes = CSVDB.loadAllRoutes(this);
         for (Route r : routes) {
             List<LatLng> latLngs = new ArrayList<>();
-            latLngs.add(CSVDB.stopWithId(r.starts.stop_id, r.route_short_name).toLatLng());
-            latLngs.add(CSVDB.stopWithId(r.finishes.stop_id, r.route_short_name).toLatLng());
+            latLngs.add(CSVDB.stopWithId(r.starts.stop_id, r.routeName).toLatLng());
+            latLngs.add(CSVDB.stopWithId(r.finishes.stop_id, r.routeName).toLatLng());
             mMap.addPolyline(new PolylineOptions()
                     .addAll(latLngs)
                     .width(3).color(Color.GRAY)
@@ -126,11 +132,17 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     }
 
     private void startCalculating() {
-        tripPlan.departureTime = getCurrentTime(new Date());
+        tripPlan.departureTime = getTime(null);
         Way w = tripPlan.calculateBestWay();
         if (w != null) {
             Toasty.info(this, "You can reach it in " + w.getTimeToReach().getMinutes()).show();
             w.draw(this, mMap);
+
+            val routeViews = RouteViewModelFactory.getRouteViews(w.getRoutes());
+            for (RouteViewModel rvm : routeViews) {
+                phvInstructions.addView(rvm);
+            }
+            phvInstructions.refresh();
 //            tvFrom.setText(tvFrom.getText().toString() + "\n" + w.getTimeToReach().getMinutes() +
 //                    " min tram (incl. waiting)");
             initInstructions();
@@ -146,9 +158,11 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
      * Default Java `new Date()` return timestamp containing both date + time,
      * we need only time.
      */
-    private Date getCurrentTime(Date date) {
+    private Date getTime(@Nullable Date date) {
         SimpleDateFormat sdf = new SimpleDateFormat("HH:mm:ss");
-        String time = sdf.format(date.getTime());
+
+        String time = (date == null) ? DEFAULT_TIME : sdf.format(date.getTime());
+
         Toasty.info(this, "Starting time: " + time).show();
         try {
             return sdf.parse(time);
@@ -157,6 +171,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         }
         return null;
     }
+
 
     void addPedestrianMarker(LatLng latLng) {
         mMap.addMarker(new MarkerOptions().position(
