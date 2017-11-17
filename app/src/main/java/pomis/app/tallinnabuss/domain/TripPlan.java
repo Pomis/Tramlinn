@@ -1,7 +1,5 @@
 package pomis.app.tallinnabuss.domain;
 
-import android.util.Log;
-
 import com.google.android.gms.maps.model.LatLng;
 
 import java.util.ArrayList;
@@ -23,15 +21,15 @@ public class TripPlan {
 
     public Date departureTime;
 
-    public TravelLeg departureStation;
+    public TravelPoint departureStation;
 
-    public TravelLeg destinationStation;
+    public TravelPoint destinationStation;
 
-    public double straightDistanceDeparture;
+    private double straightDistanceDeparture;
 
-    public double straightDistanceDestination;
+    private double straightDistanceDestination;
 
-    ArrayList<Way> recusiveWays;
+    ArrayList<TravelPoints> recursiveTravelPoints;
 
     Date currentMinTime;
 
@@ -39,7 +37,7 @@ public class TripPlan {
         currentMinTime = new Date();
         straightDistanceDeparture = 1000;
         straightDistanceDestination = 1000;
-        for (TravelLeg stop : CSVDB.stopsFiltered) {
+        for (TravelPoint stop : CSVDB.stopsFiltered) {
             // departure
             double dist =
                     sqrt(pow(stop.stop_lat - departurePoint.latitude, 2) +
@@ -58,50 +56,51 @@ public class TripPlan {
         }
     }
 
-    public Way calculateBestWay() {
-        Route directWalkRoute = RouteBuilder.from(departurePoint).to(destinationPoint).walking();
-        Route walkToStationRoute = RouteBuilder.from(departurePoint).to(departureStation).walking();
+    public TravelPoints calculateBestWay() {
+        TravelLeg directWalkTravelLeg = RouteBuilder.from(departurePoint).to(destinationPoint).walking();
+        TravelLeg walkToStationTravelLeg = RouteBuilder.from(departurePoint).to(departureStation).walking();
 
-
-        if (directWalkRoute.diff.getTime() < walkToStationRoute.diff.getTime()) {
-            Way walkWay = new Way();
-            walkWay.add(directWalkRoute, new Date());
-            return walkWay;
-        }
-
-
-        recusiveWays = new ArrayList<>();
-        ArrayList<TravelLeg> departureStops = CSVDB.stopsWhere(departureStation.stop_name);
-        for (TravelLeg stop : departureStops) {
+        recursiveTravelPoints = new ArrayList<>();
+        ArrayList<TravelPoint> departureStops = CSVDB.stopsWhere(departureStation.stop_name);
+        for (TravelPoint stop : departureStops) {
 
             Date waitTime = stop.waitForBus(departureTime);
-            Way accum = new Way(waitTime);
+            TravelPoints accum = new TravelPoints(waitTime);
 
 
-            ArrayList<Route> connections = stop.getRoutes(false);
-            for (Route r : connections) {
+            ArrayList<TravelLeg> connections = stop.getRoutes(false);
+            for (TravelLeg r : connections) {
                 r.iterate(this, departureTime, accum.mutate(r, waitTime), destinationStation);
             }
 
         }
-        Way bestWay;
-        if (recusiveWays.size() != 0) {
-            bestWay = recusiveWays.get(0);
-            for (Way w : recusiveWays) {
-                if (w.getTimeToReach().getTime() < bestWay.getTimeToReach().getTime())
-                    bestWay = w;
+        TravelPoints bestTravelPoints;
+        if (recursiveTravelPoints.size() != 0) {
+            bestTravelPoints = recursiveTravelPoints.get(0);
+            for (TravelPoints w : recursiveTravelPoints) {
+                if (w.getTimeToReach().getTime() < bestTravelPoints.getTimeToReach().getTime())
+                    bestTravelPoints = w;
             }
-            bestWay.addToEnd(walkToStationRoute, new Date(0l));
+            bestTravelPoints.addToEnd(walkToStationTravelLeg, new Date(0l));
 
-            Route walkToDestination = RouteBuilder.from(bestWay.getLastTravelLeg()).to(destinationPoint)
+            TravelLeg walkToDestination = RouteBuilder.from(bestTravelPoints.getLastTravelLeg()).to(destinationPoint)
                     .walking();
-            bestWay.add(walkToDestination, walkToDestination.diff);
+            bestTravelPoints.add(walkToDestination, walkToDestination.travelTime);
+
+            if (directWalkTravelLeg.travelTime.getTime() < (walkToStationTravelLeg.travelTime.getTime() +
+                    walkToDestination.travelTime.getTime()) ) {
+                TravelPoints walkTravelPoints = new TravelPoints();
+                walkTravelPoints.add(directWalkTravelLeg, new Date());
+                return walkTravelPoints;
+            }
         } else {
-            bestWay = new Way();
-            bestWay.add(directWalkRoute, new Date());
+            bestTravelPoints = new TravelPoints();
+            bestTravelPoints.add(directWalkTravelLeg, new Date());
         }
 
-        return bestWay;
+
+
+        return bestTravelPoints;
     }
 }
 

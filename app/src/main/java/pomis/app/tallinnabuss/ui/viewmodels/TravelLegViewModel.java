@@ -3,8 +3,6 @@ package pomis.app.tallinnabuss.ui.viewmodels;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-import com.mindorks.placeholderview.Animation;
-import com.mindorks.placeholderview.annotations.Animate;
 import com.mindorks.placeholderview.annotations.Layout;
 import com.mindorks.placeholderview.annotations.Resolve;
 import com.mindorks.placeholderview.annotations.View;
@@ -14,7 +12,6 @@ import java.util.TimeZone;
 
 import lombok.val;
 import pomis.app.tallinnabuss.R;
-import pomis.app.tallinnabuss.domain.Route;
 import pomis.app.tallinnabuss.domain.TravelLeg;
 
 /**
@@ -23,9 +20,9 @@ import pomis.app.tallinnabuss.domain.TravelLeg;
 
 @Layout(R.layout.item_route)
 //@Animate(Animation.SCALE_UP_ASC)
-public class RouteViewModel extends Route {
+public class TravelLegViewModel extends TravelLeg {
 
-    RouteViewModel() {
+    TravelLegViewModel() {
     }
 
     @View(R.id.tv_time)
@@ -41,7 +38,7 @@ public class RouteViewModel extends Route {
     private void onResolve() {
         val sdf = new SimpleDateFormat("HH:mm");
         sdf.setTimeZone(TimeZone.getTimeZone("GMT"));
-        tvTime.setText(sdf.format(diff));
+        tvTime.setText(sdf.format(travelTime));
         tvInstruction.setText(instruction);
     }
 

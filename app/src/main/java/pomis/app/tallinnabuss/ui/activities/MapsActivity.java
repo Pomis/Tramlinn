@@ -29,12 +29,12 @@ import es.dmoral.toasty.Toasty;
 import lombok.val;
 import pomis.app.tallinnabuss.R;
 import pomis.app.tallinnabuss.data.CSVDB;
-import pomis.app.tallinnabuss.domain.Route;
 import pomis.app.tallinnabuss.domain.TravelLeg;
+import pomis.app.tallinnabuss.domain.TravelPoint;
 import pomis.app.tallinnabuss.domain.TripPlan;
-import pomis.app.tallinnabuss.domain.Way;
-import pomis.app.tallinnabuss.ui.viewmodels.RouteViewModel;
-import pomis.app.tallinnabuss.ui.viewmodels.RouteViewModelFactory;
+import pomis.app.tallinnabuss.domain.TravelPoints;
+import pomis.app.tallinnabuss.ui.viewmodels.TravelLegViewModel;
+import pomis.app.tallinnabuss.ui.viewmodels.TravelLegViewModelFactory;
 
 import static pomis.app.tallinnabuss.data.Const.DEFAULT_TIME;
 
@@ -53,7 +53,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
 
     private GoogleMap mMap;
-    private ArrayList<TravelLeg> travelLegs;
+    private ArrayList<TravelPoint> travelPoints;
 
     private State activityState = State.START_IDLE;
     private TripPlan tripPlan;
@@ -68,7 +68,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         mapFragment.getMapAsync(this);
         tripPlan = new TripPlan();
         try {
-            travelLegs = CSVDB.readTramStops(this);
+            travelPoints = CSVDB.readTramStops(this);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -88,8 +88,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     }
 
     void drawTramLines() {
-        ArrayList<Route> routes = CSVDB.loadAllRoutes(this);
-        for (Route r : routes) {
+        ArrayList<TravelLeg> travelLegs = CSVDB.loadAllRoutes(this);
+        for (TravelLeg r : travelLegs) {
             List<LatLng> latLngs = new ArrayList<>();
             latLngs.add(CSVDB.stopWithId(r.starts.stop_id, r.routeName).toLatLng());
             latLngs.add(CSVDB.stopWithId(r.finishes.stop_id, r.routeName).toLatLng());
@@ -133,13 +133,13 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
     private void startCalculating() {
         tripPlan.departureTime = getTime(null);
-        Way w = tripPlan.calculateBestWay();
+        TravelPoints w = tripPlan.calculateBestWay();
         if (w != null) {
             Toasty.info(this, "You can reach it in " + w.getTimeToReach().getMinutes()).show();
             w.draw(this, mMap);
 
-            val routeViews = RouteViewModelFactory.getRouteViews(w.getRoutes());
-            for (RouteViewModel rvm : routeViews) {
+            val routeViews = TravelLegViewModelFactory.getRouteViews(w.getRoutes());
+            for (TravelLegViewModel rvm : routeViews) {
                 phvInstructions.addView(rvm);
             }
             phvInstructions.refresh();
@@ -179,7 +179,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         ).icon(BitmapDescriptorFactory.fromResource(R.drawable.ic_pedestrian)));
     }
 
-    void addBusMarker(TravelLeg leg) {
+    void addBusMarker(TravelPoint leg) {
         mMap.addMarker(new MarkerOptions().position(
                 new LatLng(
                         leg.stop_lat,

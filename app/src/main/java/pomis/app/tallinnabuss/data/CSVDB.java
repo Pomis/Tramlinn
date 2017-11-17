@@ -14,40 +14,40 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 
-import pomis.app.tallinnabuss.domain.Route;
+import pomis.app.tallinnabuss.domain.TravelLeg;
 import pomis.app.tallinnabuss.domain.RouteBuilder;
 import pomis.app.tallinnabuss.domain.TramStop;
-import pomis.app.tallinnabuss.domain.TravelLeg;
+import pomis.app.tallinnabuss.domain.TravelPoint;
 
 
 public class CSVDB {
     static final double TALLINN_LAT = 59.436962;
     static final double TALLINN_LON = 24.753574;
 
-    static public ArrayList<TravelLeg> stopsFiltered;
-    static public ArrayList<Route> routes;
+    static public ArrayList<TravelPoint> stopsFiltered;
+    static public ArrayList<TravelLeg> travelLegs;
 
     @Deprecated
-    static public ArrayList<TravelLeg> readStops(Context context) throws IOException {
+    static public ArrayList<TravelPoint> readStops(Context context) throws IOException {
 
         Reader reader = new BufferedReader(
                 new InputStreamReader(context.getAssets().open("stops.json"))
         );
         Gson gson = new Gson();
-        TravelLeg[] travelLegs = gson.fromJson(reader, TravelLeg[].class);
+        TravelPoint[] travelPoints = gson.fromJson(reader, TravelPoint[].class);
 
         stopsFiltered = new ArrayList<>();
-        for (TravelLeg travelLeg : travelLegs) {
-            if (Math.abs(travelLeg.stop_lat - TALLINN_LAT) < 0.1 &&
-                    Math.abs(travelLeg.stop_lon - TALLINN_LON) < 0.1) {
-                stopsFiltered.add(travelLeg);
+        for (TravelPoint travelPoint : travelPoints) {
+            if (Math.abs(travelPoint.stop_lat - TALLINN_LAT) < 0.1 &&
+                    Math.abs(travelPoint.stop_lon - TALLINN_LON) < 0.1) {
+                stopsFiltered.add(travelPoint);
             }
         }
         return stopsFiltered;
     }
 
 
-    static public ArrayList<TravelLeg> readTramStops(Context context) {
+    static public ArrayList<TravelPoint> readTramStops(Context context) {
         stopsFiltered = new ArrayList<>();
         try {
             InputStreamReader isr = new InputStreamReader(context.getAssets().open("tram_stops.csv"));
@@ -86,8 +86,8 @@ public class CSVDB {
         return dates;
     }
 
-    static public ArrayList<Route> loadAllRoutes(Context context) {
-        routes = new ArrayList<>();
+    static public ArrayList<TravelLeg> loadAllRoutes(Context context) {
+        travelLegs = new ArrayList<>();
         try {
             BufferedReader reader = new BufferedReader(
                     new InputStreamReader(context.getAssets().open("edges.csv"))
@@ -96,36 +96,36 @@ public class CSVDB {
             reader.readLine();
             while ((csvLine = reader.readLine()) != null) {
                 String[] row = csvLine.split(",");
-                routes.add(RouteBuilder.from(stopWithId(Integer.parseInt(row[1]), row[4]))
+                travelLegs.add(RouteBuilder.from(stopWithId(Integer.parseInt(row[1]), row[4]))
                         .to(stopWithId(Integer.parseInt(row[2]), row[4]))
                         .onTram(row[4]));
             }
         } catch (IOException ex) {
             throw new RuntimeException("Error in reading CSV file: " + ex);
         }
-        return routes;
+        return travelLegs;
     }
 
     @Nullable
-    static public TravelLeg stopWithId(int id, String lineNumber) {
-        for (TravelLeg s : stopsFiltered) {
+    static public TravelPoint stopWithId(int id, String lineNumber) {
+        for (TravelPoint s : stopsFiltered) {
             if (s.stop_id == id && s.lineNumber.equals(lineNumber)) return s;
         }
         return null;
     }
 
-    static public ArrayList<TravelLeg> stopsWhere(String name) {
-        ArrayList<TravelLeg> stops = new ArrayList<>();
-        for (TravelLeg s : stopsFiltered) {
+    static public ArrayList<TravelPoint> stopsWhere(String name) {
+        ArrayList<TravelPoint> stops = new ArrayList<>();
+        for (TravelPoint s : stopsFiltered) {
             if (s.stop_name.equals(name))
                 stops.add(s);
         }
         return stops;
     }
 
-    static public ArrayList<TravelLeg> stopsWhere(int id) {
-        ArrayList<TravelLeg> stops = new ArrayList<>();
-        for (TravelLeg s : stopsFiltered) {
+    static public ArrayList<TravelPoint> stopsWhere(int id) {
+        ArrayList<TravelPoint> stops = new ArrayList<>();
+        for (TravelPoint s : stopsFiltered) {
             if (s.stop_id == id)
                 stops.add(s);
         }
@@ -133,34 +133,34 @@ public class CSVDB {
     }
 
 
-    static public ArrayList<TravelLeg> findConnections(TravelLeg start) {
-        ArrayList<TravelLeg> connections = new ArrayList<>();
-        for (Route r : routes) {
+    static public ArrayList<TravelPoint> findConnections(TravelPoint start) {
+        ArrayList<TravelPoint> connections = new ArrayList<>();
+        for (TravelLeg r : travelLegs) {
             if (r.starts.stop_id == start.stop_id)
                 connections.add(r.finishes);
         }
         return connections;
     }
 
-    static public ArrayList<Route> findRoutesFrom(int id) {
-        ArrayList<Route> followingRoutes = new ArrayList<>();
-        for (Route r : routes) {
+    static public ArrayList<TravelLeg> findRoutesFrom(int id) {
+        ArrayList<TravelLeg> followingTravelLegs = new ArrayList<>();
+        for (TravelLeg r : travelLegs) {
             if (r.starts.stop_id == id)
-                followingRoutes.add(r);
+                followingTravelLegs.add(r);
 
         }
-        return followingRoutes;
+        return followingTravelLegs;
     }
 
-    static public ArrayList<Route> findRoutesFrom(TravelLeg start) {
-        ArrayList<Route> followingRoutes = new ArrayList<>();
-        for (Route r : routes) {
+    static public ArrayList<TravelLeg> findRoutesFrom(TravelPoint start) {
+        ArrayList<TravelLeg> followingTravelLegs = new ArrayList<>();
+        for (TravelLeg r : travelLegs) {
             if (r.starts.stop_name.equals(start.stop_name) &&
                     r.finishes.lineNumber.equals(start.lineNumber))
-                followingRoutes.add(r);
+                followingTravelLegs.add(r);
 
         }
-        return followingRoutes;
+        return followingTravelLegs;
     }
 
 

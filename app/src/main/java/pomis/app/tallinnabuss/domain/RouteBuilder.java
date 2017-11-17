@@ -12,14 +12,14 @@ import static java.lang.Math.sqrt;
  */
 
 public class RouteBuilder {
-    private Route route;
+    private TravelLeg travelLeg;
 
-    private RouteBuilder(TravelLeg from) {
-        this.route = new Route();
-        this.route.starts = from;
+    private RouteBuilder(TravelPoint from) {
+        this.travelLeg = new TravelLeg();
+        this.travelLeg.starts = from;
     }
 
-    static public RouteBuilder from(TravelLeg from) {
+    static public RouteBuilder from(TravelPoint from) {
         return new RouteBuilder(from);
     }
 
@@ -28,33 +28,34 @@ public class RouteBuilder {
         return new RouteBuilder(new Address(from));
     }
 
-    public RouteBuilder to(TravelLeg from) {
-        route.finishes = from;
+    public RouteBuilder to(TravelPoint from) {
+        travelLeg.finishes = from;
         return this;
     }
 
 
     public RouteBuilder to(LatLng from) {
-        route.finishes = new Address(from);
+        travelLeg.finishes = new Address(from);
         return this;
     }
 
-    public Route walking() {
-        route.routeName = "walk";
-        route.diff = new Date((long) sqrt(pow(route.starts.stop_lat - route.finishes.stop_lat, 2) +
-                pow(route.starts.stop_lon - route.finishes.stop_lon, 2)) * 60 * 1000);
-        return route;
+    public TravelLeg walking() {
+        travelLeg.type = TravelLeg.Type.WALK;
+        travelLeg.travelTime = new Date((long) sqrt(pow(travelLeg.starts.stop_lat - travelLeg.finishes.stop_lat, 2) +
+                pow(travelLeg.starts.stop_lon - travelLeg.finishes.stop_lon, 2)) * 60 * 1000);
+        return travelLeg;
     }
 
-    public Route interchanging() {
-        route.routeName = "interchanging";
-        route.diff = new Date((long) sqrt(pow(route.starts.stop_lat - route.finishes.stop_lat, 2) +
-                pow(route.starts.stop_lon - route.finishes.stop_lon, 2)) * 60 * 1000);
-        return route;
+    public TravelLeg interchanging() {
+        travelLeg.type = TravelLeg.Type.INTERCHANGE;
+        travelLeg.travelTime = new Date((long) sqrt(pow(travelLeg.starts.stop_lat - travelLeg.finishes.stop_lat, 2) +
+                pow(travelLeg.starts.stop_lon - travelLeg.finishes.stop_lon, 2)) * 60 * 1000);
+        return travelLeg;
     }
 
-    public Route onTram(String routeName) {
-        route.routeName = routeName;
-        return route;
+    public TravelLeg onTram(String routeName) {
+        travelLeg.type = TravelLeg.Type.TRAM;
+        travelLeg.routeName = routeName;
+        return travelLeg;
     }
 }
