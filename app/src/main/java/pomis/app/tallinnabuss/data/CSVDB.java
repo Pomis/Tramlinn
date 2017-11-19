@@ -9,13 +9,13 @@ import com.google.gson.Gson;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.io.Reader;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 
+import lombok.val;
 import pomis.app.tallinnabuss.domain.TravelLeg;
-import pomis.app.tallinnabuss.domain.RouteBuilder;
+import pomis.app.tallinnabuss.domain.TravelLegBuilder;
 import pomis.app.tallinnabuss.domain.TramStop;
 import pomis.app.tallinnabuss.domain.TravelPoint;
 
@@ -24,20 +24,20 @@ public class CSVDB {
     static final double TALLINN_LAT = 59.436962;
     static final double TALLINN_LON = 24.753574;
 
-    static public ArrayList<TravelPoint> stopsFiltered;
+    static public ArrayList<TramStop> stopsFiltered;
     static public ArrayList<TravelLeg> travelLegs;
 
     @Deprecated
-    static public ArrayList<TravelPoint> readStops(Context context) throws IOException {
+    static public ArrayList<TramStop> readStops(Context context) throws IOException {
 
-        Reader reader = new BufferedReader(
+        val reader = new BufferedReader(
                 new InputStreamReader(context.getAssets().open("stops.json"))
         );
-        Gson gson = new Gson();
-        TravelPoint[] travelPoints = gson.fromJson(reader, TravelPoint[].class);
+        val gson = new Gson();
+        val travelPoints = gson.fromJson(reader, TramStop[].class);
 
         stopsFiltered = new ArrayList<>();
-        for (TravelPoint travelPoint : travelPoints) {
+        for (val travelPoint : travelPoints) {
             if (Math.abs(travelPoint.stop_lat - TALLINN_LAT) < 0.1 &&
                     Math.abs(travelPoint.stop_lon - TALLINN_LON) < 0.1) {
                 stopsFiltered.add(travelPoint);
@@ -47,18 +47,18 @@ public class CSVDB {
     }
 
 
-    static public ArrayList<TravelPoint> readTramStops(Context context) {
+    static public ArrayList<TramStop> readTramStops(Context context) {
         stopsFiltered = new ArrayList<>();
         try {
-            InputStreamReader isr = new InputStreamReader(context.getAssets().open("tram_stops.csv"));
-            BufferedReader reader = new BufferedReader(isr);
+            val isr = new InputStreamReader(context.getAssets().open("tram_stops.csv"));
+            val reader = new BufferedReader(isr);
             String csvLine;
             reader.readLine();
             while ((csvLine = reader.readLine()) != null) {
                 String[] row = csvLine.split(",");
                 TramStop stop = new TramStop();
                 stop.stop_id = Integer.parseInt(row[1]);
-                stop.stop_name = row[3];
+                stop.pointName = row[3];
                 stop.schedule = stringsToDates(row[6].split(" "));
                 stop.stop_lat = Double.parseDouble(row[4]);
                 stop.stop_lon = Double.parseDouble(row[5]);
@@ -73,8 +73,8 @@ public class CSVDB {
     }
 
     private static ArrayList<Date> stringsToDates(String[] split) {
-        ArrayList<Date> dates = new ArrayList<>();
-        SimpleDateFormat sdf = new SimpleDateFormat("HH:mm:ss");
+        val dates = new ArrayList<Date>();
+        val sdf = new SimpleDateFormat("HH:mm:ss");
 
         for (String s : split) {
             try {
@@ -89,14 +89,14 @@ public class CSVDB {
     static public ArrayList<TravelLeg> loadAllRoutes(Context context) {
         travelLegs = new ArrayList<>();
         try {
-            BufferedReader reader = new BufferedReader(
+            val reader = new BufferedReader(
                     new InputStreamReader(context.getAssets().open("edges.csv"))
             );
             String csvLine;
             reader.readLine();
             while ((csvLine = reader.readLine()) != null) {
                 String[] row = csvLine.split(",");
-                travelLegs.add(RouteBuilder.from(stopWithId(Integer.parseInt(row[1]), row[4]))
+                travelLegs.add(TravelLegBuilder.from(stopWithId(Integer.parseInt(row[1]), row[4]))
                         .to(stopWithId(Integer.parseInt(row[2]), row[4]))
                         .onTram(row[4]));
             }
@@ -107,25 +107,25 @@ public class CSVDB {
     }
 
     @Nullable
-    static public TravelPoint stopWithId(int id, String lineNumber) {
-        for (TravelPoint s : stopsFiltered) {
+    static public TramStop stopWithId(int id, String lineNumber) {
+        for (val s : stopsFiltered) {
             if (s.stop_id == id && s.lineNumber.equals(lineNumber)) return s;
         }
         return null;
     }
 
-    static public ArrayList<TravelPoint> stopsWhere(String name) {
-        ArrayList<TravelPoint> stops = new ArrayList<>();
-        for (TravelPoint s : stopsFiltered) {
-            if (s.stop_name.equals(name))
+    static public ArrayList<TramStop> stopsWhere(String name) {
+        val stops = new ArrayList<TramStop>();
+        for (val s : stopsFiltered) {
+            if (s.pointName.equals(name))
                 stops.add(s);
         }
         return stops;
     }
 
-    static public ArrayList<TravelPoint> stopsWhere(int id) {
-        ArrayList<TravelPoint> stops = new ArrayList<>();
-        for (TravelPoint s : stopsFiltered) {
+    static public ArrayList<TramStop> stopsWhere(int id) {
+        val stops = new ArrayList<TramStop>();
+        for (val s : stopsFiltered) {
             if (s.stop_id == id)
                 stops.add(s);
         }
@@ -134,7 +134,7 @@ public class CSVDB {
 
 
     static public ArrayList<TravelPoint> findConnections(TravelPoint start) {
-        ArrayList<TravelPoint> connections = new ArrayList<>();
+        val connections = new ArrayList<TravelPoint>();
         for (TravelLeg r : travelLegs) {
             if (r.starts.stop_id == start.stop_id)
                 connections.add(r.finishes);
@@ -143,7 +143,7 @@ public class CSVDB {
     }
 
     static public ArrayList<TravelLeg> findRoutesFrom(int id) {
-        ArrayList<TravelLeg> followingTravelLegs = new ArrayList<>();
+        val followingTravelLegs = new ArrayList<TravelLeg>();
         for (TravelLeg r : travelLegs) {
             if (r.starts.stop_id == id)
                 followingTravelLegs.add(r);
@@ -153,9 +153,9 @@ public class CSVDB {
     }
 
     static public ArrayList<TravelLeg> findRoutesFrom(TravelPoint start) {
-        ArrayList<TravelLeg> followingTravelLegs = new ArrayList<>();
+        val followingTravelLegs = new ArrayList<TravelLeg>();
         for (TravelLeg r : travelLegs) {
-            if (r.starts.stop_name.equals(start.stop_name) &&
+            if (r.starts.pointName.equals(start.pointName) &&
                     r.finishes.lineNumber.equals(start.lineNumber))
                 followingTravelLegs.add(r);
 

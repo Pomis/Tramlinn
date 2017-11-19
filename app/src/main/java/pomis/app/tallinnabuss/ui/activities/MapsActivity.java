@@ -29,23 +29,23 @@ import es.dmoral.toasty.Toasty;
 import lombok.val;
 import pomis.app.tallinnabuss.R;
 import pomis.app.tallinnabuss.data.CSVDB;
+import pomis.app.tallinnabuss.domain.TramStop;
 import pomis.app.tallinnabuss.domain.TravelLeg;
+import pomis.app.tallinnabuss.domain.TravelLegStorage;
 import pomis.app.tallinnabuss.domain.TravelPoint;
 import pomis.app.tallinnabuss.domain.TripPlan;
-import pomis.app.tallinnabuss.domain.TravelPoints;
-import pomis.app.tallinnabuss.ui.viewmodels.TravelLegViewModel;
-import pomis.app.tallinnabuss.ui.viewmodels.TravelLegViewModelFactory;
+import pomis.app.tallinnabuss.ui.viewmodels.TimeViewModel;
+import pomis.app.tallinnabuss.ui.viewmodels.ViewModelFactory;
 
 import static pomis.app.tallinnabuss.data.Const.DEFAULT_TIME;
 
 public class MapsActivity extends FragmentActivity implements OnMapReadyCallback {
-    @BindView(R.id.phvInstructions)
-    PlaceHolderView phvInstructions;
-
     enum State {
         START_IDLE, DESTINATION_IDLE, ROUTING
     }
 
+    @BindView(R.id.phvInstructions)
+    PlaceHolderView phvInstructions;
     @BindView(R.id.rl_points)
     RelativeLayout rlPoints;
     @BindView(R.id.tv_hint)
@@ -53,8 +53,9 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
 
     private GoogleMap mMap;
-    private ArrayList<TravelPoint> travelPoints;
-
+    private ArrayList<TramStop> travelPoints;
+    private Date selectedTime;
+    TimeViewModel startTimePicker;
     private State activityState = State.START_IDLE;
     private TripPlan tripPlan;
 
@@ -103,6 +104,9 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
 
     void initTouches() {
+        startTimePicker = new TimeViewModel(this::setStartTime, "Select time (default "+DEFAULT_TIME+")");
+
+        phvInstructions.addView(startTimePicker);
         mMap.setOnMapClickListener(latLng -> {
             switch (activityState) {
 
@@ -119,10 +123,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                     activityState = State.ROUTING;
                     tripPlan.destinationPoint = latLng;
                     tripPlan.calculateClosestStations();
-//                    tvFrom.setText(Math.floor(tripPlan.straightDistanceDeparture * 2200) + " min walk to " + tripPlan.departureStation.stop_name);
-//                    tvTo.setText(Math.floor(tripPlan.straightDistanceDestination * 2200) + " min walk to " + tripPlan.destinationStation.stop_name);
-                    addBusMarker(tripPlan.departureStation);
-                    addBusMarker(tripPlan.destinationStation);
+                    addTramMarker(tripPlan.departureStation);
+                    addTramMarker(tripPlan.destinationStation);
 
                     startCalculating();
                     break;
@@ -131,20 +133,28 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         });
     }
 
+    void setStartTime() {
+        val dialog = com.wdullaer.materialdatetimepicker.time.TimePickerDialog
+                .newInstance((view, hourOfDay, minute, second) -> {
+                    selectedTime = getTime(new Date(1970, 0, 0, hourOfDay, minute));
+                    startTimePicker.timeToShow = hourOfDay + ":" + minute;
+                }, true);
+        dialog.show(getFragmentManager(), "dialogie");
+    }
+
     private void startCalculating() {
-        tripPlan.departureTime = getTime(null);
-        TravelPoints w = tripPlan.calculateBestWay();
+        tripPlan.departureTime = getTime(selectedTime);
+        TravelLegStorage w = tripPlan.calculateBestWay();
         if (w != null) {
             Toasty.info(this, "You can reach it in " + w.getTimeToReach().getMinutes()).show();
             w.draw(this, mMap);
 
-            val routeViews = TravelLegViewModelFactory.getRouteViews(w.getRoutes());
-            for (TravelLegViewModel rvm : routeViews) {
+            phvInstructions.removeAllViews();
+            val routeViews = ViewModelFactory.getRouteViews(this, w.getRoutes(), tripPlan.departureTime);
+            for (val rvm : routeViews) {
                 phvInstructions.addView(rvm);
             }
             phvInstructions.refresh();
-//            tvFrom.setText(tvFrom.getText().toString() + "\n" + w.getTimeToReach().getMinutes() +
-//                    " min tram (incl. waiting)");
             initInstructions();
         }
 
@@ -159,7 +169,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
      * we need only time.
      */
     private Date getTime(@Nullable Date date) {
-        SimpleDateFormat sdf = new SimpleDateFormat("HH:mm:ss");
+        SimpleDateFormat sdf = new SimpleDateFormat("HH:mm");
 
         String time = (date == null) ? DEFAULT_TIME : sdf.format(date.getTime());
 
@@ -179,12 +189,12 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         ).icon(BitmapDescriptorFactory.fromResource(R.drawable.ic_pedestrian)));
     }
 
-    void addBusMarker(TravelPoint leg) {
+    void addTramMarker(TravelPoint leg) {
         mMap.addMarker(new MarkerOptions().position(
                 new LatLng(
                         leg.stop_lat,
                         leg.stop_lon
                 )
-        ).icon(BitmapDescriptorFactory.fromResource(R.drawable.ic_bus)));
+        ).icon(BitmapDescriptorFactory.fromResource(R.drawable.ic_tram)));
     }
 }

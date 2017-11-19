@@ -15,7 +15,7 @@ import pomis.app.tallinnabuss.R;
  * Created by romanismagilov on 15.11.17.
  */
 
-public class TravelPoints {
+public class TravelLegStorage {
 
 
     private ArrayList<TravelLeg> travelLegs;
@@ -25,17 +25,17 @@ public class TravelPoints {
         return travelLegs;
     }
 
-    public TravelPoints(ArrayList<TravelLeg> way, Date timeToReach) {
+    public TravelLegStorage(ArrayList<TravelLeg> way, Date timeToReach) {
         this.travelLegs = way;
         this.timeToReach = timeToReach;
     }
 
-    public TravelPoints() {
+    public TravelLegStorage() {
         this.timeToReach = new Date(0l);
         travelLegs = new ArrayList<>();
     }
 
-    public TravelPoints(Date timeToReach) {
+    public TravelLegStorage(Date timeToReach) {
         this.timeToReach = timeToReach;
         travelLegs = new ArrayList<>();
     }
@@ -52,14 +52,14 @@ public class TravelPoints {
     }
 
 
-    public TravelPoints mutate(TravelLeg travelLeg, Date additionalTime) {
+    public TravelLegStorage mutate(TravelLeg travelLeg, Date additionalTime) {
         ArrayList<TravelLeg> routesNew = ((ArrayList<TravelLeg>) travelLegs.clone());
         routesNew.add(travelLeg);
-        TravelPoints travelPoints = new TravelPoints(
+        TravelLegStorage travelLegStorage = new TravelLegStorage(
                 routesNew,
                 new Date(this.timeToReach.getTime() + additionalTime.getTime())
         );
-        return travelPoints;
+        return travelLegStorage;
     }
 
 
@@ -70,7 +70,7 @@ public class TravelPoints {
     public boolean contains(TravelLeg travelLeg) {
         boolean contains = false;
         for (TravelLeg r : travelLegs) {
-            contains |= r.starts.stop_name.equals(travelLeg.finishes.stop_name);
+            contains |= r.starts.pointName.equals(travelLeg.finishes.pointName);
         }
         return contains;
     }
@@ -95,7 +95,7 @@ public class TravelPoints {
         return travelLegs.get(travelLegs.size() - 1).finishes;
     }
 
-    int colorRoute(Context context, TravelLeg travelLeg) {
+    public static int colorRoute(Context context, TravelLeg travelLeg) {
         int nullColor = 0;
         switch (travelLeg.type) {
             case TRAM:

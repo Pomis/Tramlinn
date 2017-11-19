@@ -5,6 +5,7 @@ import com.google.android.gms.maps.model.LatLng;
 import java.util.ArrayList;
 import java.util.Date;
 
+import lombok.val;
 import pomis.app.tallinnabuss.data.CSVDB;
 
 import static java.lang.Math.*;
@@ -29,7 +30,7 @@ public class TripPlan {
 
     private double straightDistanceDestination;
 
-    ArrayList<TravelPoints> recursiveTravelPoints;
+    ArrayList<TravelLegStorage> recursiveTravelPoints;
 
     Date currentMinTime;
 
@@ -56,51 +57,50 @@ public class TripPlan {
         }
     }
 
-    public TravelPoints calculateBestWay() {
-        TravelLeg directWalkTravelLeg = RouteBuilder.from(departurePoint).to(destinationPoint).walking();
-        TravelLeg walkToStationTravelLeg = RouteBuilder.from(departurePoint).to(departureStation).walking();
+    public TravelLegStorage calculateBestWay() {
+        val directWalkTravelLeg = TravelLegBuilder.from(departurePoint).to(destinationPoint).walking();
+        val walkToStationTravelLeg = TravelLegBuilder.from(departurePoint).to(departureStation).walking();
 
         recursiveTravelPoints = new ArrayList<>();
-        ArrayList<TravelPoint> departureStops = CSVDB.stopsWhere(departureStation.stop_name);
-        for (TravelPoint stop : departureStops) {
+        val departureStops = CSVDB.stopsWhere(departureStation.pointName);
+        for (val stop : departureStops) {
 
-            Date waitTime = stop.waitForBus(departureTime);
-            TravelPoints accum = new TravelPoints(waitTime);
+            val waitTime = stop.waitForBus(departureTime);
+            val accum = new TravelLegStorage(waitTime);
 
-
-            ArrayList<TravelLeg> connections = stop.getRoutes(false);
+            val connections = stop.getRoutes(false);
             for (TravelLeg r : connections) {
                 r.iterate(this, departureTime, accum.mutate(r, waitTime), destinationStation);
             }
 
         }
-        TravelPoints bestTravelPoints;
+        TravelLegStorage bestTravelLegStorage;
         if (recursiveTravelPoints.size() != 0) {
-            bestTravelPoints = recursiveTravelPoints.get(0);
-            for (TravelPoints w : recursiveTravelPoints) {
-                if (w.getTimeToReach().getTime() < bestTravelPoints.getTimeToReach().getTime())
-                    bestTravelPoints = w;
+            bestTravelLegStorage = recursiveTravelPoints.get(0);
+            for (TravelLegStorage w : recursiveTravelPoints) {
+                if (w.getTimeToReach().getTime() < bestTravelLegStorage.getTimeToReach().getTime())
+                    bestTravelLegStorage = w;
             }
-            bestTravelPoints.addToEnd(walkToStationTravelLeg, new Date(0l));
+            bestTravelLegStorage.addToEnd(walkToStationTravelLeg, walkToStationTravelLeg.travelTime);
 
-            TravelLeg walkToDestination = RouteBuilder.from(bestTravelPoints.getLastTravelLeg()).to(destinationPoint)
+            TravelLeg walkToDestination = TravelLegBuilder.from(bestTravelLegStorage.getLastTravelLeg()).to(destinationPoint)
                     .walking();
-            bestTravelPoints.add(walkToDestination, walkToDestination.travelTime);
+            bestTravelLegStorage.add(walkToDestination, walkToDestination.travelTime);
 
             if (directWalkTravelLeg.travelTime.getTime() < (walkToStationTravelLeg.travelTime.getTime() +
                     walkToDestination.travelTime.getTime()) ) {
-                TravelPoints walkTravelPoints = new TravelPoints();
-                walkTravelPoints.add(directWalkTravelLeg, new Date());
-                return walkTravelPoints;
+                val walkTravelLegStorage = new TravelLegStorage();
+                walkTravelLegStorage.add(directWalkTravelLeg, new Date());
+                return walkTravelLegStorage;
             }
         } else {
-            bestTravelPoints = new TravelPoints();
-            bestTravelPoints.add(directWalkTravelLeg, new Date());
+            bestTravelLegStorage = new TravelLegStorage();
+            bestTravelLegStorage.add(directWalkTravelLeg, new Date());
         }
 
 
 
-        return bestTravelPoints;
+        return bestTravelLegStorage;
     }
 }
 

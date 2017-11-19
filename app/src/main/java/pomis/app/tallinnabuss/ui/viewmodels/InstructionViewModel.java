@@ -1,5 +1,8 @@
 package pomis.app.tallinnabuss.ui.viewmodels;
 
+import android.graphics.drawable.Drawable;
+import android.support.annotation.DrawableRes;
+import android.support.annotation.IntegerRes;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -7,39 +10,35 @@ import com.mindorks.placeholderview.annotations.Layout;
 import com.mindorks.placeholderview.annotations.Resolve;
 import com.mindorks.placeholderview.annotations.View;
 
-import java.text.SimpleDateFormat;
-import java.util.TimeZone;
-
-import lombok.val;
 import pomis.app.tallinnabuss.R;
 import pomis.app.tallinnabuss.domain.TravelLeg;
+import pomis.app.tallinnabuss.domain.TravelLegStorage;
 
 /**
  * Created by romanismagilov on 17.11.17.
  */
 
-@Layout(R.layout.item_route)
+@Layout(R.layout.item_instruction)
 //@Animate(Animation.SCALE_UP_ASC)
-public class TravelLegViewModel extends TravelLeg {
+public class InstructionViewModel extends TravelLeg implements ViewModel{
 
-    TravelLegViewModel() {
+    InstructionViewModel() {
     }
 
-    @View(R.id.tv_time)
-    private TextView tvTime;
     @View(R.id.tv_instruction)
     private TextView tvInstruction;
     @View(R.id.iv_type)
     private ImageView ivType;
 
     String instruction;
+    Drawable typeImage;
+    int color;
 
     @Resolve
-    private void onResolve() {
-        val sdf = new SimpleDateFormat("HH:mm");
-        sdf.setTimeZone(TimeZone.getTimeZone("GMT"));
-        tvTime.setText(sdf.format(travelTime));
+    public void onResolve() {
         tvInstruction.setText(instruction);
+        ivType.setImageDrawable(typeImage);
+        ivType.setColorFilter(color);
     }
 
 
