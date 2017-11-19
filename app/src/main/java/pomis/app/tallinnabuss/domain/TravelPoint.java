@@ -1,15 +1,13 @@
 package pomis.app.tallinnabuss.domain;
 
 
-import android.util.Log;
-
 import com.google.android.gms.maps.model.LatLng;
 
 import java.util.ArrayList;
 import java.util.Date;
 
 import lombok.val;
-import pomis.app.tallinnabuss.data.CSVDB;
+import pomis.app.tallinnabuss.data.TransportRoutesDB;
 
 import static pomis.app.tallinnabuss.data.Const.CENTRAL_STATION;
 
@@ -23,9 +21,9 @@ public abstract class TravelPoint {
 
     public String pointName;
 
-    public double stop_lat;
+    public double latitude;
 
-    public double stop_lon;
+    public double longitude;
 
     public ArrayList<Date> schedule;
 
@@ -35,8 +33,8 @@ public abstract class TravelPoint {
 
     public LatLng toLatLng() {
         return new LatLng(
-                stop_lat,
-                stop_lon
+                latitude,
+                longitude
         );
     }
 
@@ -44,8 +42,8 @@ public abstract class TravelPoint {
 
     ArrayList<TravelLeg> getRoutes(boolean interchanging) {
         if (travelLegs == null) {
-            travelLegs = CSVDB.findRoutesFrom(this);
-            val neighbors = CSVDB.stopsWhere(pointName);
+            travelLegs = TransportRoutesDB.findRoutesFrom(this);
+            val neighbors = TransportRoutesDB.stopsWhere(pointName);
             for (TravelPoint s : neighbors) {
                 boolean isNeighbor = s.pointName.equals(pointName) && !s.lineNumber.equals(lineNumber);
                 if (pointName.equals(CENTRAL_STATION) && interchanging && isNeighbor

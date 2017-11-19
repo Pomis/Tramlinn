@@ -6,7 +6,7 @@ import java.util.ArrayList;
 import java.util.Date;
 
 import lombok.val;
-import pomis.app.tallinnabuss.data.CSVDB;
+import pomis.app.tallinnabuss.data.TransportRoutesDB;
 
 import static java.lang.Math.*;
 
@@ -38,18 +38,18 @@ public class TripPlan {
         currentMinTime = new Date();
         straightDistanceDeparture = 1000;
         straightDistanceDestination = 1000;
-        for (TravelPoint stop : CSVDB.stopsFiltered) {
+        for (TravelPoint stop : TransportRoutesDB.stopsFiltered) {
             // departure
             double dist =
-                    sqrt(pow(stop.stop_lat - departurePoint.latitude, 2) +
-                            pow(stop.stop_lon - departurePoint.longitude, 2));
+                    sqrt(pow(stop.latitude - departurePoint.latitude, 2) +
+                            pow(stop.longitude - departurePoint.longitude, 2));
             if (dist < straightDistanceDeparture) {
                 straightDistanceDeparture = dist;
                 departureStation = stop;
             }
             // destination
-            dist = sqrt(pow(stop.stop_lat - destinationPoint.latitude, 2) +
-                    pow(stop.stop_lon - destinationPoint.longitude, 2));
+            dist = sqrt(pow(stop.latitude - destinationPoint.latitude, 2) +
+                    pow(stop.longitude - destinationPoint.longitude, 2));
             if (dist < straightDistanceDestination) {
                 straightDistanceDestination = dist;
                 destinationStation = stop;
@@ -62,7 +62,7 @@ public class TripPlan {
         val walkToStationTravelLeg = TravelLegBuilder.from(departurePoint).to(departureStation).walking();
 
         recursiveTravelPoints = new ArrayList<>();
-        val departureStops = CSVDB.stopsWhere(departureStation.pointName);
+        val departureStops = TransportRoutesDB.stopsWhere(departureStation.pointName);
         for (val stop : departureStops) {
 
             val waitTime = stop.waitForTransport(departureTime);

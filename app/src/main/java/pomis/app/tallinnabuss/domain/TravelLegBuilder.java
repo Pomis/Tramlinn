@@ -46,16 +46,16 @@ public class TravelLegBuilder {
 
     public TravelLeg walking() {
         travelLeg.type = TravelLeg.Type.WALK;
-        val time = sqrt(pow(travelLeg.starts.stop_lat - travelLeg.finishes.stop_lat, 2) +
-                pow(travelLeg.starts.stop_lon - travelLeg.finishes.stop_lon, 2)) * 2200 * 60 * 1000;
+        val time = sqrt(pow(travelLeg.starts.latitude - travelLeg.finishes.latitude, 2) +
+                pow(travelLeg.starts.longitude - travelLeg.finishes.longitude, 2)) * 2200 * 60 * 1000;
         travelLeg.travelTime = new Date((long) time);
         return travelLeg;
     }
 
     public TravelLeg interchanging() {
         travelLeg.type = TravelLeg.Type.INTERCHANGE;
-        val time = sqrt(pow(travelLeg.starts.stop_lat - travelLeg.finishes.stop_lat, 2) +
-                pow(travelLeg.starts.stop_lon - travelLeg.finishes.stop_lon, 2)) * 2200 * 60 * 1000;
+        val time = sqrt(pow(travelLeg.starts.latitude - travelLeg.finishes.latitude, 2) +
+                pow(travelLeg.starts.longitude - travelLeg.finishes.longitude, 2)) * 2200 * 60 * 1000;
         travelLeg.travelTime = new Date((long) time);
         return travelLeg;
     }

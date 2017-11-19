@@ -28,7 +28,7 @@ import butterknife.ButterKnife;
 import es.dmoral.toasty.Toasty;
 import lombok.val;
 import pomis.app.tallinnabuss.R;
-import pomis.app.tallinnabuss.data.CSVDB;
+import pomis.app.tallinnabuss.data.TransportRoutesDB;
 import pomis.app.tallinnabuss.domain.TransportStop;
 import pomis.app.tallinnabuss.domain.TravelLeg;
 import pomis.app.tallinnabuss.domain.TravelLegStorage;
@@ -69,7 +69,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         mapFragment.getMapAsync(this);
         tripPlan = new TripPlan();
         try {
-            travelPoints = CSVDB.readTramStops(this);
+            travelPoints = TransportRoutesDB.readTramStops(this);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -89,11 +89,11 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     }
 
     void drawTramLines() {
-        ArrayList<TravelLeg> travelLegs = CSVDB.loadAllRoutes(this);
+        ArrayList<TravelLeg> travelLegs = TransportRoutesDB.loadAllRoutes(this);
         for (TravelLeg r : travelLegs) {
             List<LatLng> latLngs = new ArrayList<>();
-            latLngs.add(CSVDB.stopWithId(r.starts.stop_id, r.routeName).toLatLng());
-            latLngs.add(CSVDB.stopWithId(r.finishes.stop_id, r.routeName).toLatLng());
+            latLngs.add(TransportRoutesDB.stopWithId(r.starts.stop_id, r.routeName).toLatLng());
+            latLngs.add(TransportRoutesDB.stopWithId(r.finishes.stop_id, r.routeName).toLatLng());
             mMap.addPolyline(new PolylineOptions()
                     .addAll(latLngs)
                     .width(3).color(Color.GRAY)
@@ -138,6 +138,10 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 .newInstance((view, hourOfDay, minute, second) -> {
                     selectedTime = getTime(new Date(1970, 0, 0, hourOfDay, minute));
                     startTimePicker.timeToShow = hourOfDay + ":" + minute;
+
+                    val datedialog = com.wdullaer.materialdatetimepicker.date.DatePickerDialog
+                            .newInstance((view1, year, monthOfYear, dayOfMonth) -> {});
+                    datedialog.show(getFragmentManager(), "dialogie2");
                 }, true);
         dialog.show(getFragmentManager(), "dialogie");
     }
@@ -146,7 +150,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         tripPlan.departureTime = getTime(selectedTime);
         TravelLegStorage w = tripPlan.calculateBestWay();
         if (w != null) {
-            Toasty.info(this, "You can reach it in " + w.getTimeToReach().getMinutes()).show();
             w.draw(this, mMap);
 
             phvInstructions.removeAllViews();
@@ -192,8 +195,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     void addTramMarker(TravelPoint leg) {
         mMap.addMarker(new MarkerOptions().position(
                 new LatLng(
-                        leg.stop_lat,
-                        leg.stop_lon
+                        leg.latitude,
+                        leg.longitude
                 )
         ).icon(BitmapDescriptorFactory.fromResource(R.drawable.ic_tram)));
     }

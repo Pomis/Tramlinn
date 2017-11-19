@@ -9,6 +9,8 @@ import java.util.Date;
  */
 
 public class TransportStop extends TravelPoint {
+    public String lineNumber;
+
     Date waitForTransport(Date startTime) {
         for (Date s : schedule) {
             if (s.getTime() > startTime.getTime()) {
