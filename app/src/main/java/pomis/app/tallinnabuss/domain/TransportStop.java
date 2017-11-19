@@ -8,8 +8,8 @@ import java.util.Date;
  * Created by romanismagilov on 17.11.17.
  */
 
-public class TramStop extends TravelPoint {
-    Date waitForBus(Date startTime) {
+public class TransportStop extends TravelPoint {
+    Date waitForTransport(Date startTime) {
         for (Date s : schedule) {
             if (s.getTime() > startTime.getTime()) {
                 Date diff = new Date(s.getTime() - startTime.getTime());

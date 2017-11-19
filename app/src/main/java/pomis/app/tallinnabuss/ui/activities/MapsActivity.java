@@ -29,7 +29,7 @@ import es.dmoral.toasty.Toasty;
 import lombok.val;
 import pomis.app.tallinnabuss.R;
 import pomis.app.tallinnabuss.data.CSVDB;
-import pomis.app.tallinnabuss.domain.TramStop;
+import pomis.app.tallinnabuss.domain.TransportStop;
 import pomis.app.tallinnabuss.domain.TravelLeg;
 import pomis.app.tallinnabuss.domain.TravelLegStorage;
 import pomis.app.tallinnabuss.domain.TravelPoint;
@@ -53,7 +53,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
 
     private GoogleMap mMap;
-    private ArrayList<TramStop> travelPoints;
+    private ArrayList<TransportStop> travelPoints;
     private Date selectedTime;
     TimeViewModel startTimePicker;
     private State activityState = State.START_IDLE;

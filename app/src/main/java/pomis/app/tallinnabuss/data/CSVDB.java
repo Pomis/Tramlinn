@@ -16,7 +16,7 @@ import java.util.Date;
 import lombok.val;
 import pomis.app.tallinnabuss.domain.TravelLeg;
 import pomis.app.tallinnabuss.domain.TravelLegBuilder;
-import pomis.app.tallinnabuss.domain.TramStop;
+import pomis.app.tallinnabuss.domain.TransportStop;
 import pomis.app.tallinnabuss.domain.TravelPoint;
 
 
@@ -24,17 +24,17 @@ public class CSVDB {
     static final double TALLINN_LAT = 59.436962;
     static final double TALLINN_LON = 24.753574;
 
-    static public ArrayList<TramStop> stopsFiltered;
+    static public ArrayList<TransportStop> stopsFiltered;
     static public ArrayList<TravelLeg> travelLegs;
 
     @Deprecated
-    static public ArrayList<TramStop> readStops(Context context) throws IOException {
+    static public ArrayList<TransportStop> readStops(Context context) throws IOException {
 
         val reader = new BufferedReader(
                 new InputStreamReader(context.getAssets().open("stops.json"))
         );
         val gson = new Gson();
-        val travelPoints = gson.fromJson(reader, TramStop[].class);
+        val travelPoints = gson.fromJson(reader, TransportStop[].class);
 
         stopsFiltered = new ArrayList<>();
         for (val travelPoint : travelPoints) {
@@ -47,7 +47,7 @@ public class CSVDB {
     }
 
 
-    static public ArrayList<TramStop> readTramStops(Context context) {
+    static public ArrayList<TransportStop> readTramStops(Context context) {
         stopsFiltered = new ArrayList<>();
         try {
             val isr = new InputStreamReader(context.getAssets().open("tram_stops.csv"));
@@ -56,7 +56,7 @@ public class CSVDB {
             reader.readLine();
             while ((csvLine = reader.readLine()) != null) {
                 String[] row = csvLine.split(",");
-                TramStop stop = new TramStop();
+                TransportStop stop = new TransportStop();
                 stop.stop_id = Integer.parseInt(row[1]);
                 stop.pointName = row[3];
                 stop.schedule = stringsToDates(row[6].split(" "));
@@ -107,15 +107,15 @@ public class CSVDB {
     }
 
     @Nullable
-    static public TramStop stopWithId(int id, String lineNumber) {
+    static public TransportStop stopWithId(int id, String lineNumber) {
         for (val s : stopsFiltered) {
             if (s.stop_id == id && s.lineNumber.equals(lineNumber)) return s;
         }
         return null;
     }
 
-    static public ArrayList<TramStop> stopsWhere(String name) {
-        val stops = new ArrayList<TramStop>();
+    static public ArrayList<TransportStop> stopsWhere(String name) {
+        val stops = new ArrayList<TransportStop>();
         for (val s : stopsFiltered) {
             if (s.pointName.equals(name))
                 stops.add(s);
@@ -123,8 +123,8 @@ public class CSVDB {
         return stops;
     }
 
-    static public ArrayList<TramStop> stopsWhere(int id) {
-        val stops = new ArrayList<TramStop>();
+    static public ArrayList<TransportStop> stopsWhere(int id) {
+        val stops = new ArrayList<TransportStop>();
         for (val s : stopsFiltered) {
             if (s.stop_id == id)
                 stops.add(s);

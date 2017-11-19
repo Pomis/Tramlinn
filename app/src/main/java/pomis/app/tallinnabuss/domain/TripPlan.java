@@ -65,7 +65,7 @@ public class TripPlan {
         val departureStops = CSVDB.stopsWhere(departureStation.pointName);
         for (val stop : departureStops) {
 
-            val waitTime = stop.waitForBus(departureTime);
+            val waitTime = stop.waitForTransport(departureTime);
             val accum = new TravelLegStorage(waitTime);
 
             val connections = stop.getRoutes(false);
